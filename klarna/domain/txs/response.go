@@ -3,6 +3,7 @@ package txs
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -54,9 +55,54 @@ func (t CategorizedTransaction) IsBetaalautomaat() bool {
 
 func (t CategorizedTransaction) Time() string {
 
-	var reTime = regexp.MustCompile("[0-9]{2}:[0-9]{2}")
+	var reTime = regexp.MustCompile("[0-9]{2}[:.]{1}[0-9]{2} ")
 	// IF(LEFT([@reference];3)="BEA";REPLACE(MID([@reference];SEARCH("/";[@reference];1)+1;5);3;1;":");IF([@[T_Betaalautomaat]]=1;MID([@reference];16;5);""))
-	return reTime.FindString(t.Reference)
+	return strings.Replace(strings.TrimSpace(reTime.FindString(t.Reference)), ".", ":", 1)
+}
+
+func (t CategorizedTransaction) IsCredit() bool {
+	return t.Type == "CREDIT"
+}
+
+func (t CategorizedTransaction) IsDebit() bool {
+	return t.Type == "DEBIT"
+}
+
+// Hour returns the hour from the transaction.
+// If the time cannot be found, it returns -1
+func (t CategorizedTransaction) hour() int {
+	hhmm := t.Time()
+	fmt.Printf("finding hour for time: %s\n", hhmm)
+	if hhmm == "" {
+		return -1
+	}
+
+	hh := strings.Split(hhmm, ":")[0]
+
+	n, err := strconv.Atoi(hh)
+	if err != nil {
+		return -1
+	}
+
+	return n
+}
+
+func (t CategorizedTransaction) PartOfDay() (string, bool) {
+	h := t.hour()
+	if h < 0 {
+		return "", false
+	}
+
+	switch {
+	case h >= 6 && h < 12:
+		return "morning", true
+	case h >= 12 && h < 18:
+		return "afternoon", true
+	case h >= 18 && h < 22:
+		return "evening", true
+	default:
+		return "night", true
+	}
 }
 
 func (t CategorizedTransaction) AmountStr() string {

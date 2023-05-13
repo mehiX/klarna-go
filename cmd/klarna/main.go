@@ -56,8 +56,44 @@ func main() {
 		},
 	}
 
+	var cmdReportMonthly = &cobra.Command{
+		Use:   "report-monthly",
+		Short: "show a monthly report for credit and debit",
+		Run: func(cmd *cobra.Command, args []string) {
+			kc := klarna.New(os.Getenv("KLARNA_BASE_URL"), os.Getenv("KLARNA_TOKEN"), klarna.WithDebug(debug))
+			txsSvc := txs.NewService(kc)
+
+			transactions, err := txsSvc.ReportMonthlyCreditBalance(context.Background(), insightsConsumerID)
+			if err != nil {
+				log.Println(err)
+				os.Exit(2)
+			}
+
+			b, _ := json.MarshalIndent(transactions, " ", "  ")
+			fmt.Println(string(b))
+		},
+	}
+
+	var cmdReportDaily = &cobra.Command{
+		Use:   "report-daily",
+		Short: "show a daily spending report, split by parts of day where possible",
+		Run: func(cmd *cobra.Command, args []string) {
+			kc := klarna.New(os.Getenv("KLARNA_BASE_URL"), os.Getenv("KLARNA_TOKEN"), klarna.WithDebug(debug))
+			txsSvc := txs.NewService(kc)
+
+			transactions, err := txsSvc.ReportDailySpending(context.Background(), insightsConsumerID)
+			if err != nil {
+				log.Println(err)
+				os.Exit(2)
+			}
+
+			b, _ := json.MarshalIndent(transactions, " ", "  ")
+			fmt.Println(string(b))
+		},
+	}
+
 	var cmdAccountsInfo = &cobra.Command{
-		Use:   "accounts",
+		Use:   "info",
 		Short: "Show information for accounts associated to the consumer ID",
 		Run: func(cmd *cobra.Command, args []string) {
 
@@ -121,6 +157,7 @@ func main() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "verbose", "v", false, "Enable debug")
 
 	cmdAccounts.AddCommand(cmdAccountsInfo, cmdAccountsBalances, cmdAccountsBalanceOverTime)
+	cmdTransactions.AddCommand(cmdReportMonthly, cmdReportDaily)
 	cmdView.AddCommand(cmdTransactions, cmdAccounts)
 	rootCmd.AddCommand(cmdView)
 

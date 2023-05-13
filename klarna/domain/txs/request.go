@@ -14,7 +14,7 @@ type Request struct {
 	RequiredDataAvailability dataAvailability       `json:"required_data_availability,omitempty"`
 	Order                    []ReportOptionsOrderBy `json:"order,omitempty"`
 	CombineAccounts          string                 `json:"combine_accounts,omitempty"` // ?Enum<'NONE', 'ALL'> default 'NONE'
-	Size                     int64                  `json:"size"`                       // Only return a maximum of size transactions in the report. The default will be unlimited.
+	Size                     int64                  `json:"size,omitempty"`             // Only return a maximum of size transactions in the report. The default will be unlimited.
 	ReportDays               int64                  `json:"report_days"`
 }
 

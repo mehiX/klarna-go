@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/mehix/klarna-go/klarna"
+	"github.com/mehix/klarna-go/klarna/domain/report"
 	"github.com/mehix/klarna-go/klarna/domain/txs"
 )
 
@@ -30,6 +32,100 @@ func (s *Service) FetchLatest(ctx context.Context, insightsConsumerID string, la
 	r.Size = latest
 
 	return s.requestTransactions(ctx, r)
+}
+
+func (s *Service) ReportDailySpending(ctx context.Context, insightsConsumerID string) ([]report.DailySpending, error) {
+	r := txs.DefaultRequest
+	r.InsightsConsumerID = insightsConsumerID
+
+	transactions, err := s.requestTransactions(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+
+	daily := make(map[string][5]int64)
+
+	for _, t := range transactions {
+		amounts, ok := daily[t.BookingDate]
+		if !ok {
+			amounts = [5]int64{}
+		}
+
+		if t.IsDebit() {
+			amounts[0] += t.Amount.Amount
+			part, ok := t.PartOfDay()
+			if ok {
+				switch part {
+				case "morning":
+					amounts[1] += t.Amount.Amount
+				case "afternoon":
+					amounts[2] += t.Amount.Amount
+				case "evening":
+					amounts[3] += t.Amount.Amount
+				case "night":
+					amounts[4] += t.Amount.Amount
+				}
+			}
+		}
+
+		daily[t.BookingDate] = amounts
+	}
+
+	var rep []report.DailySpending
+	for date, amounts := range daily {
+		rep = append(rep, report.DailySpending{
+			Date:       date,
+			Debit:      amounts[0],
+			Mornings:   amounts[1],
+			Afternoons: amounts[2],
+			Evenings:   amounts[3],
+			Nights:     amounts[4],
+		})
+	}
+
+	return rep, nil
+}
+
+func (s *Service) ReportMonthlyCreditBalance(ctx context.Context, insightsConsumerID string) ([]report.MonthlyCreditDebit, error) {
+	r := txs.DefaultRequest
+	r.InsightsConsumerID = insightsConsumerID
+
+	transactions, err := s.requestTransactions(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+
+	monthly := make(map[string][2]int64)
+
+	for _, t := range transactions {
+		key := string(t.BookingDate[:7])
+		amounts, ok := monthly[key]
+		if !ok {
+			amounts = [2]int64{}
+		}
+		if t.IsCredit() {
+			amounts[0] += t.Amount.Amount
+		} else if t.IsDebit() {
+			amounts[1] += t.Amount.Amount
+		}
+		monthly[key] = amounts
+	}
+
+	var rep []report.MonthlyCreditDebit
+	for month, amounts := range monthly {
+		rep = append(rep, report.MonthlyCreditDebit{
+			Month:   month,
+			Credit:  amounts[0],
+			Debit:   amounts[1],
+			Balance: amounts[0] - amounts[1],
+		})
+	}
+
+	sort.Slice(rep, func(i, j int) bool {
+		return rep[i].Month > rep[j].Month
+	})
+
+	return rep, nil
 }
 
 func (s *Service) requestTransactions(ctx context.Context, r txs.Request) ([]txs.CategorizedTransaction, error) {
