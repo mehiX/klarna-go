@@ -9,6 +9,7 @@ import (
 	"github.com/mehix/klarna-go/klarna"
 	"github.com/mehix/klarna-go/klarna/domain/report"
 	"github.com/mehix/klarna-go/klarna/domain/txs"
+	"golang.org/x/exp/slices"
 )
 
 type Service struct {
@@ -34,7 +35,13 @@ func (s *Service) FetchLatest(ctx context.Context, insightsConsumerID string, la
 	return s.requestTransactions(ctx, r)
 }
 
-func (s *Service) ReportDailySpending(ctx context.Context, insightsConsumerID string) ([]report.DailySpending, error) {
+// ReportDailySpending returns aggregated spendings per day.
+// Fetches transactions from Klarna and then processes them.
+// It will ignore from the calculations transactions towards any IBAN in `ignoreIbans`
+func (s *Service) ReportDailySpending(
+	ctx context.Context,
+	insightsConsumerID string,
+	ignoreIbans ...string) ([]report.DailySpending, error) {
 	r := txs.DefaultRequest
 	r.InsightsConsumerID = insightsConsumerID
 
@@ -46,6 +53,9 @@ func (s *Service) ReportDailySpending(ctx context.Context, insightsConsumerID st
 	daily := make(map[string][5]int64)
 
 	for _, t := range transactions {
+		if slices.Contains(ignoreIbans, t.CounterParty.IBAN) {
+			continue
+		}
 		amounts, ok := daily[t.BookingDate]
 		if !ok {
 			amounts = [5]int64{}
@@ -83,10 +93,20 @@ func (s *Service) ReportDailySpending(ctx context.Context, insightsConsumerID st
 		})
 	}
 
+	sort.Slice(rep, func(i, j int) bool {
+		return rep[i].Date > rep[j].Date
+	})
+
 	return rep, nil
 }
 
-func (s *Service) ReportMonthlyCreditBalance(ctx context.Context, insightsConsumerID string) ([]report.MonthlyCreditDebit, error) {
+// ReportMonthlyCreditBalance returns aggregated spendings per month.
+// Fetches transactions from Klarna and then processes them.
+// It will ignore from the calculations transactions towards any IBAN in `ignoreIbans`
+func (s *Service) ReportMonthlyCreditBalance(
+	ctx context.Context,
+	insightsConsumerID string,
+	ignoreIbans ...string) ([]report.MonthlyCreditDebit, error) {
 	r := txs.DefaultRequest
 	r.InsightsConsumerID = insightsConsumerID
 
@@ -98,6 +118,9 @@ func (s *Service) ReportMonthlyCreditBalance(ctx context.Context, insightsConsum
 	monthly := make(map[string][2]int64)
 
 	for _, t := range transactions {
+		if slices.Contains(ignoreIbans, t.CounterParty.IBAN) {
+			continue
+		}
 		key := string(t.BookingDate[:7])
 		amounts, ok := monthly[key]
 		if !ok {
