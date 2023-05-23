@@ -35,6 +35,14 @@ func (s *Service) FetchLatest(ctx context.Context, insightsConsumerID string, la
 	return s.requestTransactions(ctx, r)
 }
 
+func (s *Service) FetchLastDays(ctx context.Context, insightsConsumerID string, days int64) ([]txs.CategorizedTransaction, error) {
+	r := txs.DefaultRequest
+	r.InsightsConsumerID = insightsConsumerID
+	r.ReportDays = days
+
+	return s.requestTransactions(ctx, r)
+}
+
 // ReportDailySpending returns aggregated spendings per day.
 // Fetches transactions from Klarna and then processes them.
 // It will ignore from the calculations transactions towards any IBAN in `ignoreIbans`
