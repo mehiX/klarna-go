@@ -46,6 +46,7 @@ type CategorizedTransaction struct {
 	Categories            []domain.Category          `json:"categories"`
 	Brand                 domain.Brand               `json:"brand"`
 	Labels                map[string]string          `json:"labels"`
+	ExtraCategories       []domain.Category          `json:"extra_categories"` // categorized added by client libraries
 }
 
 func (t CategorizedTransaction) IsBetaalautomaat() bool {
