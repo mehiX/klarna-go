@@ -16,6 +16,7 @@ type Request struct {
 	CombineAccounts          string                 `json:"combine_accounts,omitempty"` // ?Enum<'NONE', 'ALL'> default 'NONE'
 	Size                     int64                  `json:"size,omitempty"`             // Only return a maximum of size transactions in the report. The default will be unlimited.
 	ReportDays               int64                  `json:"report_days"`
+	TransactionType          string                 `json:"transaction_type,omitempty"` // ?Enum<'DEBIT', 'CREDIT', 'DEBIT_AND_ZERO'>
 }
 
 type dataAvailability string

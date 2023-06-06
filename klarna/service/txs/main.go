@@ -27,10 +27,44 @@ func (s *Service) FetchAll(ctx context.Context, insightsConsumerID string) ([]tx
 	return s.requestTransactions(ctx, r)
 }
 
+func (s *Service) FetchAllCredit(ctx context.Context, insightsConsumerID string) ([]txs.CategorizedTransaction, error) {
+	r := txs.DefaultRequest
+	r.InsightsConsumerID = insightsConsumerID
+	r.TransactionType = "CREDIT"
+
+	return s.requestTransactions(ctx, r)
+}
+
+func (s *Service) FetchAllDebit(ctx context.Context, insightsConsumerID string) ([]txs.CategorizedTransaction, error) {
+	r := txs.DefaultRequest
+	r.InsightsConsumerID = insightsConsumerID
+	r.TransactionType = "DEBIT"
+
+	return s.requestTransactions(ctx, r)
+}
+
 func (s *Service) FetchLatest(ctx context.Context, insightsConsumerID string, latest int64) ([]txs.CategorizedTransaction, error) {
 	r := txs.DefaultRequest
 	r.InsightsConsumerID = insightsConsumerID
 	r.Size = latest
+
+	return s.requestTransactions(ctx, r)
+}
+
+func (s *Service) FetchLatestCredit(ctx context.Context, insightsConsumerID string, latest int64) ([]txs.CategorizedTransaction, error) {
+	r := txs.DefaultRequest
+	r.InsightsConsumerID = insightsConsumerID
+	r.Size = latest
+	r.TransactionType = "CREDIT"
+
+	return s.requestTransactions(ctx, r)
+}
+
+func (s *Service) FetchLatestDebit(ctx context.Context, insightsConsumerID string, latest int64) ([]txs.CategorizedTransaction, error) {
+	r := txs.DefaultRequest
+	r.InsightsConsumerID = insightsConsumerID
+	r.Size = latest
+	r.TransactionType = "DEBIT"
 
 	return s.requestTransactions(ctx, r)
 }
