@@ -54,7 +54,7 @@ type ErrorResponse struct {
 }
 
 func (e ErrorResponse) Error() string {
-	return fmt.Sprintf("%s - %s", e.Code, e.Message)
+	return fmt.Sprintf("%s - %s %v", e.Code, e.Message, e.Errors)
 }
 
 type ErrorDetails struct {

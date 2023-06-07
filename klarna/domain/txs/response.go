@@ -11,7 +11,8 @@ import (
 )
 
 type Response struct {
-	Data Data `json:"data"`
+	Data  Data                 `json:"data"`
+	Error domain.ErrorResponse `json:"error,omitempty"`
 }
 
 type Data struct {

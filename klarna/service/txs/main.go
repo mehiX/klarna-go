@@ -211,6 +211,9 @@ func (s *Service) requestTransactions(ctx context.Context, r txs.Request) ([]txs
 	}
 
 	if len(resp.Data.Reports) == 0 {
+		if resp.Error.Code != "" {
+			return nil, resp.Error
+		}
 		return nil, fmt.Errorf("no transactions found")
 	}
 
