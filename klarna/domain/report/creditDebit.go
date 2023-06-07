@@ -1,5 +1,7 @@
 package report
 
+import "github.com/mehix/klarna-go/klarna/domain/txs"
+
 type MonthlyCreditDebit struct {
 	Month   string `json:"month"` // YYYY-MM
 	Credit  int64  `json:"credit"`
@@ -8,10 +10,11 @@ type MonthlyCreditDebit struct {
 }
 
 type DailySpending struct {
-	Date       string `json:"date"` // YYYY-MM-DD
-	Debit      int64  `json:"debit"`
-	Mornings   int64  `json:"mornings"`
-	Afternoons int64  `json:"afternoons"`
-	Evenings   int64  `json:"evenings"`
-	Nights     int64  `json:"nights"`
+	Date         string                                  `json:"date"` // YYYY-MM-DD
+	Debit        int64                                   `json:"debit"`
+	Mornings     int64                                   `json:"mornings"`
+	Afternoons   int64                                   `json:"afternoons"`
+	Evenings     int64                                   `json:"evenings"`
+	Nights       int64                                   `json:"nights"`
+	Transactions map[string][]txs.CategorizedTransaction `json:"transactions"`
 }

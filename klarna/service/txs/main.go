@@ -93,6 +93,7 @@ func (s *Service) ReportDailySpending(
 	}
 
 	daily := make(map[string][5]int64)
+	dailyTxs := make(map[string]map[string][]txs.CategorizedTransaction)
 
 	for _, t := range transactions {
 		if slices.Contains(ignoreIbans, t.CounterParty.IBAN) {
@@ -101,6 +102,10 @@ func (s *Service) ReportDailySpending(
 		amounts, ok := daily[t.BookingDate]
 		if !ok {
 			amounts = [5]int64{}
+		}
+		dt, ok := dailyTxs[t.BookingDate]
+		if !ok {
+			dt = make(map[string][]txs.CategorizedTransaction)
 		}
 
 		if t.IsDebit() {
@@ -118,20 +123,23 @@ func (s *Service) ReportDailySpending(
 					amounts[4] += t.Amount.Amount
 				}
 			}
+			dt[part] = append(dt[part], t)
 		}
 
 		daily[t.BookingDate] = amounts
+		dailyTxs[t.BookingDate] = dt
 	}
 
 	var rep []report.DailySpending
 	for date, amounts := range daily {
 		rep = append(rep, report.DailySpending{
-			Date:       date,
-			Debit:      amounts[0],
-			Mornings:   amounts[1],
-			Afternoons: amounts[2],
-			Evenings:   amounts[3],
-			Nights:     amounts[4],
+			Date:         date,
+			Debit:        amounts[0],
+			Mornings:     amounts[1],
+			Afternoons:   amounts[2],
+			Evenings:     amounts[3],
+			Nights:       amounts[4],
+			Transactions: dailyTxs[date],
 		})
 	}
 
