@@ -69,6 +69,17 @@ func (s *Service) FetchLatestDebit(ctx context.Context, insightsConsumerID strin
 	return s.requestTransactions(ctx, r)
 }
 
+func (s *Service) FetchDebitForPeriod(ctx context.Context, insightsConsumerID string, fromDate, toDate string) ([]txs.CategorizedTransaction, error) {
+	r := txs.DefaultRequest
+	r.InsightsConsumerID = insightsConsumerID
+	r.TransactionType = "DEBIT"
+	r.ReportDays = 0
+	r.FromDate = fromDate
+	r.ToDate = toDate
+
+	return s.requestTransactions(ctx, r)
+}
+
 func (s *Service) FetchLastDays(ctx context.Context, insightsConsumerID string, days int64) ([]txs.CategorizedTransaction, error) {
 	r := txs.DefaultRequest
 	r.InsightsConsumerID = insightsConsumerID
@@ -84,13 +95,31 @@ func (s *Service) ReportDailySpending(
 	ctx context.Context,
 	insightsConsumerID string,
 	ignoreIbans ...string) ([]report.DailySpending, error) {
-	r := txs.DefaultRequest
-	r.InsightsConsumerID = insightsConsumerID
 
-	transactions, err := s.requestTransactions(ctx, r)
+	transactions, err := s.FetchAllDebit(ctx, insightsConsumerID)
 	if err != nil {
 		return nil, err
 	}
+
+	return dailySpending(transactions, ignoreIbans...)
+}
+
+func (s *Service) ReportDailySpendingForPeriod(
+	ctx context.Context,
+	insightsConsumerID string,
+	fromDate, toDate string,
+	ignoreIbans ...string,
+) ([]report.DailySpending, error) {
+
+	transactions, err := s.FetchDebitForPeriod(ctx, insightsConsumerID, fromDate, toDate)
+	if err != nil {
+		return nil, err
+	}
+
+	return dailySpending(transactions, ignoreIbans...)
+}
+
+func dailySpending(transactions []txs.CategorizedTransaction, ignoreIbans ...string) ([]report.DailySpending, error) {
 
 	daily := make(map[string][5]int64)
 	dailyTxs := make(map[string]map[string][]txs.CategorizedTransaction)

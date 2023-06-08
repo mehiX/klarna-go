@@ -10,6 +10,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/mehix/klarna-go/klarna"
+	"github.com/mehix/klarna-go/klarna/domain/report"
 	"github.com/mehix/klarna-go/klarna/service/account"
 	"github.com/mehix/klarna-go/klarna/service/txs"
 	"github.com/spf13/cobra"
@@ -21,6 +22,7 @@ var (
 	days                  int
 	debug                 bool
 	onlyCredit, onlyDebit bool
+	fromDate, toDate      string
 )
 
 func main() {
@@ -46,13 +48,22 @@ func main() {
 			kc := klarna.New(os.Getenv("KLARNA_BASE_URL"), os.Getenv("KLARNA_TOKEN"), klarna.WithDebug(debug))
 			txsSvc := txs.NewService(kc)
 
+			if (fromDate != "" && toDate == "") || (fromDate == "" && toDate != "") {
+				log.Println("fromDate and toDate should be either both empty or both provided")
+				os.Exit(3)
+			}
+
 			var transactions any
 			var err error
 
 			if onlyCredit {
 				transactions, err = txsSvc.FetchLatestCredit(context.TODO(), insightsConsumerID, size)
 			} else if onlyDebit {
-				transactions, err = txsSvc.FetchLatestDebit(context.TODO(), insightsConsumerID, size)
+				if fromDate != "" {
+					transactions, err = txsSvc.FetchDebitForPeriod(context.TODO(), insightsConsumerID, fromDate, toDate)
+				} else {
+					transactions, err = txsSvc.FetchLatestDebit(context.TODO(), insightsConsumerID, size)
+				}
 			} else {
 				transactions, err = txsSvc.FetchLatest(context.TODO(), insightsConsumerID, size)
 			}
@@ -92,7 +103,20 @@ func main() {
 			kc := klarna.New(os.Getenv("KLARNA_BASE_URL"), os.Getenv("KLARNA_TOKEN"), klarna.WithDebug(debug))
 			txsSvc := txs.NewService(kc)
 
-			transactions, err := txsSvc.ReportDailySpending(context.Background(), insightsConsumerID)
+			if (fromDate != "" && toDate == "") || (fromDate == "" && toDate != "") {
+				log.Println("fromDate and toDate should be either both empty or both provided")
+				os.Exit(3)
+			}
+
+			var transactions []report.DailySpending
+			var err error
+
+			if fromDate != "" {
+				transactions, err = txsSvc.ReportDailySpendingForPeriod(context.TODO(), insightsConsumerID, fromDate, toDate)
+			} else {
+				transactions, err = txsSvc.ReportDailySpending(context.Background(), insightsConsumerID)
+			}
+
 			if err != nil {
 				log.Println(err)
 				os.Exit(2)
@@ -160,9 +184,12 @@ func main() {
 		},
 	}
 
-	cmdTransactions.Flags().Int64VarP(&size, "limit", "l", 1, "number of transactions to return")
+	cmdTransactions.PersistentFlags().Int64VarP(&size, "limit", "l", 1, "number of transactions to return")
 	cmdTransactions.Flags().BoolVar(&onlyCredit, "only-credit", false, "show only credit transactions")
 	cmdTransactions.Flags().BoolVar(&onlyDebit, "only-debit", false, "show only debit transactions")
+	cmdTransactions.PersistentFlags().StringVar(&fromDate, "from", "", "begin of the reporting period")
+	cmdTransactions.PersistentFlags().StringVar(&toDate, "to", "", "end of the reporting period")
+
 	cmdAccountsBalanceOverTime.Flags().IntVar(&days, "days", 1000, "days of history to retrieve")
 
 	var rootCmd = &cobra.Command{Use: "klarna"}
