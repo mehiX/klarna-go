@@ -13,11 +13,11 @@ import (
 )
 
 type Service struct {
-	KlarnaCli *klarna.Client
+	klarnaCli *klarna.Client
 }
 
 func NewService(klarnaCli *klarna.Client) *Service {
-	return &Service{KlarnaCli: klarnaCli}
+	return &Service{klarnaCli: klarnaCli}
 }
 
 func (s *Service) FetchAll(ctx context.Context, insightsConsumerID string) ([]txs.CategorizedTransaction, error) {
@@ -237,7 +237,7 @@ func (s *Service) requestTransactions(ctx context.Context, r txs.Request) ([]txs
 		return nil, fmt.Errorf("[requestTransactions] marshal payload: %w", err)
 	}
 
-	b, err := s.KlarnaCli.Post(ctx, "/insights/v1/reports/categorization/create", payload)
+	b, err := s.klarnaCli.Post(ctx, "/insights/v1/reports/categorization/create", payload)
 	if err != nil {
 		return nil, err
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 type Service struct {
-	KlarnaCli *klarna.Client
+	klarnaCli *klarna.Client
 }
 
 func NewService(kc *klarna.Client) *Service {

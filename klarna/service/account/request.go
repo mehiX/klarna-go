@@ -15,7 +15,7 @@ func (s *Service) requestInfo(ctx context.Context, r account.RequestInfo) ([]acc
 		return nil, fmt.Errorf("[requestInfo] marshal payload: %w", err)
 	}
 
-	b, err := s.KlarnaCli.Post(ctx, "/insights/v1/reports/account-info/create", payload)
+	b, err := s.klarnaCli.Post(ctx, "/insights/v1/reports/account-info/create", payload)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (s *Service) requestBalances(ctx context.Context, r account.RequestBalances
 		return nil, fmt.Errorf("[requestBalances] marshal payload: %w", err)
 	}
 
-	b, err := s.KlarnaCli.Post(ctx, "/insights/v1/reports/balances/create", payload)
+	b, err := s.klarnaCli.Post(ctx, "/insights/v1/reports/balances/create", payload)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (s *Service) requestBalanceOverTime(ctx context.Context, r account.RequestB
 		return nil, fmt.Errorf("[requestBalanceOverTime] marshal payload: %w", err)
 	}
 
-	b, err := s.KlarnaCli.Post(ctx, "/insights/v1/reports/balance-over-time/create", payload)
+	b, err := s.klarnaCli.Post(ctx, "/insights/v1/reports/balance-over-time/create", payload)
 	if err != nil {
 		return nil, err
 	}
