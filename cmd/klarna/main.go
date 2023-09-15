@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mehix/klarna-go/klarna"
 	"github.com/mehix/klarna-go/klarna/domain/report"
+	domainTxs "github.com/mehix/klarna-go/klarna/domain/txs"
 	"github.com/mehix/klarna-go/klarna/service/account"
 	"github.com/mehix/klarna-go/klarna/service/txs"
 	"github.com/spf13/cobra"
@@ -85,7 +86,7 @@ func main() {
 			kc := klarna.New(os.Getenv("KLARNA_BASE_URL"), os.Getenv("KLARNA_TOKEN"), klarna.WithDebug(debug))
 			txsSvc := txs.NewService(kc)
 
-			transactions, err := txsSvc.ReportMonthlyCreditBalance(context.Background(), insightsConsumerID)
+			transactions, err := txsSvc.ReportMonthlyCreditBalance(context.Background(), domainTxs.Filter{InsightsConsumerID: insightsConsumerID})
 			if err != nil {
 				log.Println(err)
 				os.Exit(2)

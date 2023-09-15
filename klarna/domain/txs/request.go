@@ -34,3 +34,9 @@ type ReportOptionsOrderBy struct {
 	Order string `json:"order"` // ?Enum<'ASC', 'DESC'> default ASC
 	Field string `json:"field"` // Enum<'AMOUNT','DATE','CATEGORY','BRAND','AMOUNT_WITH_TYPE'>
 }
+
+type Filter struct {
+	InsightsConsumerID string
+	FromDate           string // YYYY-MM-DD
+	ToDate             string // YYYY-MM-DD
+}

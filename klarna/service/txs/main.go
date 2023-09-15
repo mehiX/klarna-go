@@ -184,10 +184,12 @@ func dailySpending(transactions []txs.CategorizedTransaction, ignoreIbans ...str
 // It will ignore from the calculations transactions towards any IBAN in `ignoreIbans`
 func (s *Service) ReportMonthlyCreditBalance(
 	ctx context.Context,
-	insightsConsumerID string,
+	filter txs.Filter,
 	ignoreIbans ...string) ([]report.MonthlyCreditDebit, error) {
 	r := txs.DefaultRequest
-	r.InsightsConsumerID = insightsConsumerID
+	r.InsightsConsumerID = filter.InsightsConsumerID
+	r.FromDate = filter.FromDate
+	r.ToDate = filter.ToDate
 
 	transactions, err := s.requestTransactions(ctx, r)
 	if err != nil {
